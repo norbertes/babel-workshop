@@ -18,7 +18,11 @@ export function countStringLiterals(code) {
 // Returns how many identifiers are used in the source code
 export function countIdentifiers(code) {
     let ast = babylon.parse(code)
-    
+    let count = 0
+    traverse(ast, {
+        Identifier: () => { count++ },
+    });
+    return count
 }
 
 // Returns how many string literals with name i are used in the source code
@@ -28,7 +32,13 @@ export function countIdentifiersWithNameI(code) {
     // Paths also give you access to the parent node and information about the local scope
     // More info about paths: https://github.com/thejameskyle/babel-handbook/blob/master/translations/en/plugin-handbook.md#paths
     let ast = babylon.parse(code)
-    
+    let count = 0
+    traverse(ast, {
+        Identifier: (path) => {
+            if (path.node.name === 'i') count++;
+        }
+    })
+    return count
 }
 
 // Returns name of longest identifier
@@ -36,7 +46,13 @@ export function countIdentifiersWithNameI(code) {
 export function findLongestIdentifier(code) {
     var ast = babylon.parse(code)
     var longestIdentifier = "";
-    
+    traverse(ast, {
+        Identifier: (path) => {
+            if (path.node.name.length > longestIdentifier.length) {
+                longestIdentifier = path.node.name
+            }
+        }
+    })
     return longestIdentifier
 }
 
@@ -53,12 +69,21 @@ export function getNodeCountByType(code) {
     // You can use `enter` as a catch-all visitor, instead of a specific node type like `StringLiteral`
     var ast = babylon.parse(code)
     var nodesByType = {}
-    
+    traverse(ast, {
+        enter: (path) => {
+            const type = path.node.type;
+            nodesByType.hasOwnProperty(type) ?
+                nodesByType[type] += 1 :
+                nodesByType[type] = 1;
+        }
+    })
+
+
     return nodesByType
 }
 
 // Try your code on real files! Change SHOW_STATS to true
-const SHOW_STATS = false
+const SHOW_STATS = true
 const url = "https://cdnjs.cloudflare.com/ajax/libs/react/15.6.1/react.min.js"
 // const url = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"
 // const url = "https://a.trellocdn.com/js/0a5b55922c036780f28ba28f0034a174/app.js" // (SLOW!)
